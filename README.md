@@ -1,1 +1,5 @@
-# Hire-you
+# Hire you
+
+npx convex dev
+
+npm run dev
