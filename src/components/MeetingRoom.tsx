@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 
 const MeetingRoom = () => {
-  return <div>MeetingRoom</div>;
+  const [layout, setLayout] = useState<"grid" | "speaker">("speaker");
+  return <div>MeetingRoom : 2:26:02</div>;
 };
 
 export default MeetingRoom;
