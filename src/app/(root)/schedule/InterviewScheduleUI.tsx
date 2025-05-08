@@ -33,7 +33,7 @@ function InterviewScheduleUI() {
   const [open, setOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  //   const interviews = useQuery(api.interviews.getAllInterviews) ?? [];
+  const interviews = useQuery(api.interviews.getAllInterviews) ?? [];
   const users = useQuery(api.users.getUsers) ?? [];
   const createInterview = useMutation(api.interviews.createInterview);
 
@@ -305,7 +305,7 @@ function InterviewScheduleUI() {
       </div>
 
       {/* LOADING STATE & MEETING CARDS */}
-      {/* {!interviews ? (
+      {!interviews ? (
         <div className="flex justify-center py-12">
           <Loader2Icon className="size-8 animate-spin text-muted-foreground" />
         </div>
@@ -321,7 +321,7 @@ function InterviewScheduleUI() {
         <div className="text-center py-12 text-muted-foreground">
           No interviews scheduled
         </div>
-      )} */}
+      )}
     </div>
   );
 }
