@@ -42,12 +42,10 @@ function CodeEditor() {
       direction="vertical"
       className="min-h-[calc-100vh-4rem-1px]"
     >
-      {/* QUESTION SECTION */}
       <ResizablePanel>
         <ScrollArea className="h-full">
           <div className="p-6">
             <div className="max-w-4xl mx-auto space-y-6">
-              {/* HEADER */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -78,7 +76,6 @@ function CodeEditor() {
 
                   <Select value={language} onValueChange={handleLanguageChange}>
                     <SelectTrigger className="w-[150px]">
-                      {/* SELECT VALUE */}
                       <SelectValue>
                         <div className="flex items-center gap-2">
                           <img
@@ -90,7 +87,7 @@ function CodeEditor() {
                         </div>
                       </SelectValue>
                     </SelectTrigger>
-                    {/* SELECT CONTENT */}
+
                     <SelectContent>
                       {LANGUAGES.map((lang) => (
                         <SelectItem key={lang.id} value={lang.id}>
@@ -109,7 +106,6 @@ function CodeEditor() {
                 </div>
               </div>
 
-              {/* PROBLEM DESC. */}
               <Card>
                 <CardHeader className="flex flex-row items-center gap-2">
                   <BookIcon className="h-5 w-5 text-primary/80" />
@@ -124,7 +120,6 @@ function CodeEditor() {
                 </CardContent>
               </Card>
 
-              {/* PROBLEM EXAMPLES */}
               <Card>
                 <CardHeader className="flex flex-row items-center gap-2">
                   <LightbulbIcon className="h-5 w-5 text-yellow-500" />
@@ -158,7 +153,6 @@ function CodeEditor() {
                 </CardContent>
               </Card>
 
-              {/* CONSTRAINTS */}
               {selectedQuestion.constraints && (
                 <Card>
                   <CardHeader className="flex flex-row items-center gap-2">
@@ -184,7 +178,6 @@ function CodeEditor() {
 
       <ResizableHandle withHandle />
 
-      {/* CODE EDITOR */}
       <ResizablePanel defaultSize={60} maxSize={100}>
         <div className="h-full relative">
           <Editor
