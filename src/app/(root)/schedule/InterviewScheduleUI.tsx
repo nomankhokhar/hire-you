@@ -135,15 +135,12 @@ function InterviewScheduleUI() {
   return (
     <div className="container max-w-7xl mx-auto p-6 space-y-8">
       <div className="flex items-center justify-between">
-        {/* HEADER INFO */}
         <div>
           <h1 className="text-3xl font-bold">Interviews</h1>
           <p className="text-muted-foreground mt-1">
             Schedule and manage interviews
           </p>
         </div>
-
-        {/* DIALOG */}
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -155,7 +152,6 @@ function InterviewScheduleUI() {
               <DialogTitle>Schedule Interview</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              {/* INTERVIEW TITLE */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Title</label>
                 <Input
@@ -167,7 +163,6 @@ function InterviewScheduleUI() {
                 />
               </div>
 
-              {/* INTERVIEW DESC */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Description</label>
                 <Textarea
@@ -180,7 +175,6 @@ function InterviewScheduleUI() {
                 />
               </div>
 
-              {/* CANDIDATE */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Candidate</label>
                 <Select
@@ -205,7 +199,6 @@ function InterviewScheduleUI() {
                 </Select>
               </div>
 
-              {/* INTERVIEWERS */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Interviewers</label>
                 <div className="flex flex-wrap gap-2 mb-2">
@@ -245,9 +238,7 @@ function InterviewScheduleUI() {
                 )}
               </div>
 
-              {/* DATE & TIME */}
               <div className="flex gap-4">
-                {/* CALENDAR */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Date</label>
                   <Calendar
@@ -260,8 +251,6 @@ function InterviewScheduleUI() {
                     className="rounded-md border"
                   />
                 </div>
-
-                {/* TIME */}
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Time</label>
@@ -283,7 +272,6 @@ function InterviewScheduleUI() {
                 </div>
               </div>
 
-              {/* ACTION BUTTONS */}
               <div className="flex justify-end gap-3 pt-4">
                 <Button variant="outline" onClick={() => setOpen(false)}>
                   Cancel
@@ -304,7 +292,6 @@ function InterviewScheduleUI() {
         </Dialog>
       </div>
 
-      {/* LOADING STATE & MEETING CARDS */}
       {!interviews ? (
         <div className="flex justify-center py-12">
           <Loader2Icon className="size-8 animate-spin text-muted-foreground" />
