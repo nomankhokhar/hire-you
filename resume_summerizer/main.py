@@ -2,6 +2,10 @@ import os
 from fastapi import FastAPI, UploadFile, File, Form
 from services.pdf_extractor import extract_all_text_and_save
 from services.gemini_summarizer import summarize_resume_from_file
+from db.mongodb import db
+from db.models import JobPost
+from datetime import datetime
+
 
 app = FastAPI()
 
@@ -39,7 +43,7 @@ async def upload_resume(
     summery = summarize_resume_from_file(text)
 
     os.remove(file_path)  # Clean up the uploaded file after processing
-    
+
     return {
         "message": "Your Resume is uploaded",
         "data": {
@@ -49,3 +53,14 @@ async def upload_resume(
             "extracted_text": summery
         }
     }
+
+
+@app.post("/upload-job-post")
+async def create_job(job: JobPost):
+    now = datetime.utcnow()
+    job_data = job.dict()
+    job_data["createdAt"] = now
+    job_data["updatedAt"] = now
+
+    result = await db["jobs"].insert_one(job_data)
+    return {"id": str(result.inserted_id)}
