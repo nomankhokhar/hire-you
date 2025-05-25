@@ -1,3 +1,22 @@
 
 .env*
 ./env
+
+*/resume
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+
+# Environment variables
+.env
+
+# VSCode or other IDE configs
+.vscode/
+.idea/

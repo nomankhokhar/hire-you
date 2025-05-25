@@ -1,32 +1,50 @@
-from dotenv import load_dotenv
 import os
-from google import genai
+from fastapi import FastAPI, UploadFile, File, Form
+from services.pdf_extractor import extract_all_text_and_save
+from services.gemini_summarizer import summarize_resume_from_file
 
-# Load environment variables
-load_dotenv()
+app = FastAPI()
 
-# Load Gemini API key
-YOUR_API_KEY = os.getenv('YOUR_API_KEY')
+@app.get("/ping")
+def read_root():
+    return {"ping": "pong"}
 
-# Initialize Gemini client
-client = genai.Client(api_key=YOUR_API_KEY)
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# Read CV text from file
-with open("cv_text.txt", "r", encoding="utf-8") as f:
-    cv_text = f.read()
+@app.post("/upload-resume")
+async def upload_resume(
+    name: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(...),
+    file: UploadFile = File(...)
+):
+    # Ensure it's a PDF
+    if not file.filename.endswith(".pdf"):
+        return {"error": "Only PDF files are allowed."}
 
-# Define prompt with embedded CV text
-prompt = (
-    "If I give the Resume to you, can you summarize it for me? "
-    "What are the key points I should know about this person? "
-    "Please summarize it in a few sentences.\n\nResume:\n" + cv_text
-)
+    # Sanitize filename
+    file_name = name.replace(" ", "_").lower() + "_" + file.filename
+    file_path = os.path.join(UPLOAD_DIR, file_name)
 
-# Send to Gemini for summarization
-response = client.models.generate_content(
-    model="gemini-2.0-flash",
-    contents=prompt,
-)
+    # Save the uploaded PDF
+    with open(file_path, "wb") as f:
+        f.write(await file.read())
 
-# Print response
-print(response.text)
+    # Define path to save extracted text
+    txt_output_path = os.path.join(UPLOAD_DIR, f"{file_name}.txt")
+
+    # Extract and save text
+    text = extract_all_text_and_save(file_path, txt_output_path)
+    if not text:
+        return {"error": "Failed to extract text from the PDF."}
+    summery = summarize_resume_from_file(text)
+    return {
+        "message": "Your Resume is uploaded",
+        "data": {
+            "name": name,
+            "email": email,
+            "phone": phone,
+            "extracted_text": summery
+        }
+    }
