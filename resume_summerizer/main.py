@@ -31,14 +31,15 @@ async def upload_resume(
     with open(file_path, "wb") as f:
         f.write(await file.read())
 
-    # Define path to save extracted text
-    txt_output_path = os.path.join(UPLOAD_DIR, f"{file_name}.txt")
 
     # Extract and save text
-    text = extract_all_text_and_save(file_path, txt_output_path)
+    text = extract_all_text_and_save(file_path)
     if not text:
         return {"error": "Failed to extract text from the PDF."}
     summery = summarize_resume_from_file(text)
+
+    os.remove(file_path)  # Clean up the uploaded file after processing
+    
     return {
         "message": "Your Resume is uploaded",
         "data": {
