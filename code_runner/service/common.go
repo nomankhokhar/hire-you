@@ -37,7 +37,8 @@ func RunCode(codeRunner types.CodeRunner) (string, error) {
 		runCmd = exec.Command("python", filePath)
 
 	case "java":
-		filePath = filepath.Join(tempDir, "script.java")
+		className = "Main"
+		filePath = filepath.Join(tempDir, className+".java")
 		if err := os.WriteFile(filePath, []byte(code), 0644); err != nil {
 			return "", fmt.Errorf("failed to write Java file: %v", err)
 		}
