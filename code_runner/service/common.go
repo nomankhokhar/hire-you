@@ -34,7 +34,7 @@ func RunCode(codeRunner types.CodeRunner) (string, error) {
 		if err := os.WriteFile(filePath, []byte(code), 0644); err != nil {
 			return "", fmt.Errorf("failed to write Python file: %v", err)
 		}
-		runCmd = exec.Command("python", filePath)
+		runCmd = exec.Command("python3", filePath)
 
 	case "java":
 		className = "Main"
