@@ -1,13 +1,20 @@
-'use client';
+"use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CreateJob from "@/components/CreateJob";
+import ListedJobs from "@/components/ListedJobs";
+import toast from "react-hot-toast";
+import { JobFormType } from "@/zod/jobSchema";
 
-type CreateJob = {
+
+export type createJob = {
   title: string;
   summary: string;
   description: string;
@@ -22,13 +29,13 @@ type CreateJob = {
   currency: string;
   benefits: string;
   tags: string;
-    companyName: string;
-    companyDescription: string;
-    companyLocations: string;
-    companyWebsite: string;
-    deadline: string;
+  companyName: string;
+  companyDescription: string;
+  companyLocations: string;
+  companyWebsite: string;
+  deadline: string;
 };
-type JobPost = {
+export type jobPost = {
   _id: string;
   title: string;
   summary: string;
@@ -52,213 +59,210 @@ type JobPost = {
     locations: string[];
     website: string;
   };
-  deadline: string;    // ISO date string
-  createdAt: string;   // ISO date string
-  updatedAt: string;   // ISO date string
+  deadline: string; // ISO date string
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
 };
 
-
 export default function JobBoard() {
-  const [jobs, setJobs] = useState<JobPost[]>([]);
-  const [form, setForm] = useState<CreateJob>({
+  const [jobs, setJobs] = useState<jobPost[]>([]);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<createJob>({
     title: "Senior Python Developer",
-    summary: "We are looking for a highly experienced Senior Backend Engineer with deep expertise in Python, Django, and DRF.",
-    description: "This role offers the opportunity to work on a modern, modular backend stack featuring Celery, Docker, CI/CD pipelines, and cloud-native infrastructure.",
-    requirements: "4+ years of experience with Python, Django, and DRF\nExperience with Celery and PostgreSQL\nKnowledge of CI/CD, Docker, and AWS",
-    responsibilities: "Design and maintain backend services using Django\nBuild scalable RESTful APIs\nImplement background tasks with Celery\nCollaborate with frontend and DevOps teams",
-    requiredSkills: "Python,Django,Django REST Framework,PostgreSQL,Celery,Docker,AWS,Git,CI/CD,TDD",
+    summary:
+      "We are looking for a highly experienced Senior Backend Engineer with deep expertise in Python, Django, and DRF.",
+    description:
+      "This role offers the opportunity to work on a modern, modular backend stack featuring Celery, Docker, CI/CD pipelines, and cloud-native infrastructure.",
+    requirements:
+      "4+ years of experience with Python, Django, and DRF\nExperience with Celery and PostgreSQL\nKnowledge of CI/CD, Docker, and AWS",
+    responsibilities:
+      "Design and maintain backend services using Django\nBuild scalable RESTful APIs\nImplement background tasks with Celery\nCollaborate with frontend and DevOps teams",
+    requiredSkills:
+      "Python,Django,Django REST Framework,PostgreSQL,Celery,Docker,AWS,Git,CI/CD,TDD",
     niceToHaveSkills: "React,ETL pipelines,Nginx,Microservices",
     experienceYears: 4,
     isRemote: true,
     salaryMin: 150000,
     salaryMax: 200000,
     currency: "PKR",
-    benefits: "Health Insurance\nProvident Fund\nAnnual Paid Leaves\nCertifications & Training\nCar & Bike Finance\nChild Education Program\nTwo Annual Trips\nStars of the Month\nReferral Bonuses\nBirthday & Eid Gifts",
+    benefits:
+      "Health Insurance\nProvident Fund\nAnnual Paid Leaves\nCertifications & Training\nCar & Bike Finance\nChild Education Program\nTwo Annual Trips\nStars of the Month\nReferral Bonuses\nBirthday & Eid Gifts",
     tags: "Senior,Backend,Python,Remote,Django,Celery",
     companyName: "PureLogics",
-    companyDescription: "A full-service technology company with 18+ years of experience and offices in the USA, UAE, and Pakistan.",
+    companyDescription:
+      "A full-service technology company with 18+ years of experience and offices in the USA, UAE, and Pakistan.",
     companyLocations: "USA,UAE,Lahore",
     companyWebsite: "https://purelogics.net",
-    deadline: "2025-07-21"
+    deadline: "2025-07-21",
   });
 
+  const [viewDatils, setViewDetails] = useState<jobPost | null>(null);
+  const handleViewDetails = (id: string) => {
+    const job = jobs.find((job) => job._id === id);
+    if (job) {
+      setViewDetails(job);
+      setOpen(true);
+    }
+  };
 
   const fetchJobs = async () => {
-    const res = await axios.get("http://localhost:8000/job-posts");
+    const res = await axios.get(process.env.NEXT_PUBLIC_BACKEND_URL +"/job-posts");
     setJobs(res.data);
   };
 
   useEffect(() => {
     fetchJobs();
   }, []);
-
-  const handleChange = (e: any) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+ const handleCreateJob = async (data: JobFormType) => {
+  const payload = {
+    ...data,
+    requirements: data.requirements.split("\n"),
+    responsibilities: data.responsibilities.split("\n"),
+    requiredSkills: data.requiredSkills.split(","),
+    niceToHaveSkills: (data.niceToHaveSkills ?? "").split(","),
+    benefits: data.benefits.split("\n"),
+    tags: data.tags.split(","),
+    company: {
+      name: data.companyName,
+      description: data.companyDescription,
+      locations: data.companyLocations.split(","),
+      website: data.companyWebsite,
+    },
+    salary: {
+      min: data.salaryMin,
+      max: data.salaryMax,
+      currency: data.currency,
+    },
   };
 
-  const handleSubmit = async () => {
-    const payload = {
-      title: form.title,
-      summary: form.summary,
-      description: form.description,
-      requirements: form.requirements.split("\n"),
-      responsibilities: form.responsibilities.split("\n"),
-      requiredSkills: form.requiredSkills.split(","),
-      niceToHaveSkills: form.niceToHaveSkills.split(","),
-      experienceYears: form.experienceYears,
-      isRemote: form.isRemote,
-      salary: {
-        min: form.salaryMin,
-        max: form.salaryMax,
-        currency: form.currency,
-      },
-      benefits: form.benefits.split("\n"),
-      tags: form.tags.split(","),
-      company: {
-        name: form.companyName,
-        description: form.companyDescription,
-        locations: form.companyLocations.split(","),
-        website: form.companyWebsite,
-      },
-      deadline: form.deadline,
-    };
+  const res = await axios.post(process.env.NEXT_PUBLIC_BACKEND_URL + "/upload-job-post", payload);
 
-    await axios.post("http://localhost:8000/upload-job-post", payload);
-    await fetchJobs();
-  };
+  if (res.status !== 200) {
+    toast.error("Failed to create job");
+    return;
+  }
+  fetchJobs();
+  toast.success("Job created successfully");
+};
 
-  const handleDelete = async (id : string) => {
-    await axios.delete(`http://localhost:8000/delete-job/${id}`);
+
+  const handleDelete = async (id: string) => {
+    const res = await axios.delete(process.env.NEXT_PUBLIC_BACKEND_URL + `/delete-job/${id}`);
+    if (res.status !== 200) {
+      toast.error("Failed to delete job");
+      return;
+    }
     await fetchJobs();
+    toast.success("Job deleted successfully");
   };
 
   return (
     <div className="p-6 space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label className="pb-2">Title</Label>
-          <Input name="title" value={form.title} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Summary</Label>
-          <Input name="summary" value={form.summary} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Deadline</Label>
-          <Input name="deadline" type="date" value={form.deadline} onChange={handleChange} />
-        </div>
-        <div className="md:col-span-3">
-          <Label className="pb-2">Description</Label>
-          <Textarea name="description" value={form.description} onChange={handleChange} />
-        </div>
-        <div className="md:col-span-3">
-          <Label className="pb-2">Requirements (1 per line)</Label>
-          <Textarea name="requirements" value={form.requirements} onChange={handleChange} />
-        </div>
-        <div className="md:col-span-3">
-          <Label className="pb-2">Responsibilities (1 per line)</Label>
-          <Textarea name="responsibilities" value={form.responsibilities} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Required Skills (comma separated)</Label>
-          <Input name="requiredSkills" value={form.requiredSkills} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Nice to Have Skills (comma separated)</Label>
-          <Input name="niceToHaveSkills" value={form.niceToHaveSkills} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Experience Years</Label>
-          <Input type="number" name="experienceYears" value={form.experienceYears} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Is Remote?</Label>
-          <Input type="checkbox" name="isRemote" checked={form.isRemote} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Salary Min</Label>
-          <Input type="number" name="salaryMin" value={form.salaryMin} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Salary Max</Label>
-          <Input type="number" name="salaryMax" value={form.salaryMax} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Currency</Label>
-          <Input name="currency" value={form.currency} onChange={handleChange} />
-        </div>
-        <div className="md:col-span-3">
-          <Label className="pb-2">Benefits (1 per line)</Label>
-          <Textarea name="benefits" value={form.benefits} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Tags (comma separated)</Label>
-          <Input name="tags" value={form.tags} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Company Name</Label>
-          <Input name="companyName" value={form.companyName} onChange={handleChange} />
-        </div>
-        <div className="md:col-span-2">
-          <Label className="pb-2">Company Description</Label>
-          <Textarea name="companyDescription" value={form.companyDescription} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Company Locations (comma separated)</Label>
-          <Input name="companyLocations" value={form.companyLocations} onChange={handleChange} />
-        </div>
-        <div>
-          <Label className="pb-2">Company Website</Label>
-          <Input name="companyWebsite" value={form.companyWebsite} onChange={handleChange} />
-        </div>
-      </div>
-      <Button onClick={handleSubmit}>Submit Job</Button>
+      <Tabs defaultValue="create-job">
+        <TabsList>
+          <TabsTrigger value="create-job">Create Job</TabsTrigger>
+          <TabsTrigger value="listed-job">Listed Job</TabsTrigger>
+        </TabsList>
+        <TabsContent value="create-job">
+        <CreateJob onSubmit={handleCreateJob} />
 
-      <div className="space-y-4 pt-6">
-     {jobs.map((job) => (
-  <Card key={job._id} className="bg-green-100 p-4 rounded-xl shadow-md">
-    <CardContent className="flex flex-col gap-2">
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-xl font-semibold text-slate-800">{job.title}</h2>
-          <p className="text-sm text-gray-600">
-            {job.company?.name} — {job.company?.locations?.join(", ")}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            Salary: {job.salary.min.toLocaleString()} - {job.salary.max.toLocaleString()} {job.salary.currency}
-          </p>
-          <p className="text-xs text-gray-500">
-            Deadline: {new Date(job.deadline).toLocaleDateString()}
-          </p>
-          <div className="mt-2 flex flex-wrap gap-1">
-            {job.tags.slice(0, 4).map((tag, index) => (
-              <span
-                key={index}
-                className="bg-blue-200 text-xs text-blue-800 px-2 py-0.5 rounded-full"
-              >
-                {tag}
-              </span>
-            ))}
+        </TabsContent>
+        <TabsContent value="listed-job">
+          <ListedJobs
+            jobs={jobs}
+            handleDelete={handleDelete}
+            handleViewDetails={handleViewDetails}
+          />
+        </TabsContent>
+      </Tabs>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-[500px] h-[calc(100vh-200px)] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Job Details</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 text-sm text-gray-700">
+            <h2 className="text-xl font-semibold text-primary">
+              {viewDatils?.title}
+            </h2>
+            <p>{viewDatils?.summary}</p>
+
+            <h3 className="text-lg font-semibold mt-4">
+              Advanced Features & Technologies
+            </h3>
+            <ul className="list-disc pl-5">
+              {viewDatils?.description
+                .split("\n")
+                .map((item, idx) => <li key={idx}>{item}</li>)}
+            </ul>
+
+            <h3 className="text-lg font-semibold mt-4">Responsibilities</h3>
+            <ul className="list-disc pl-5">
+              {viewDatils?.responsibilities.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+
+            <h3 className="text-lg font-semibold mt-4">Requirements</h3>
+            <ul className="list-disc pl-5">
+              {viewDatils?.requirements.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+
+            {(viewDatils?.niceToHaveSkills ?? []).length > 0 && (
+              <>
+                <h3 className="text-lg font-semibold mt-4">Nice to Have</h3>
+                <ul className="list-disc pl-5">
+                  {(viewDatils?.niceToHaveSkills ?? []).map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            <h3 className="text-lg font-semibold mt-4">Required Skills</h3>
+            <ul className="list-disc pl-5">
+              {viewDatils?.requiredSkills.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+
+            <h3 className="text-lg font-semibold mt-4">Experience</h3>
+            <p>Min {viewDatils?.experienceYears} years</p>
+
+            <h3 className="text-lg font-semibold mt-4">About Us</h3>
+            <p>{viewDatils?.company.description}</p>
+
+            <h3 className="text-lg font-semibold mt-4">
+              What are we offering?
+            </h3>
+            <ul className="list-disc pl-5">
+              {viewDatils?.benefits.map((item, idx) => (
+                <li key={idx}>{item}</li>
+              ))}
+            </ul>
+
+            <div className="mt-6 text-xs text-gray-500">
+              <p>
+                Location: {viewDatils?.company.locations.join(", ")} | Deadline:{" "}
+                {new Date(viewDatils?.deadline ?? "").toLocaleDateString()}
+              </p>
+              <p>
+                Website:{" "}
+                <a
+                  href={viewDatils?.company.website}
+                  className="text-blue-600 underline"
+                  target="_blank"
+                >
+                  {viewDatils?.company.website}
+                </a>
+              </p>
+            </div>
           </div>
-        </div>
-
-        <div className="flex flex-col items-end gap-2">
-          <Button variant="secondary" onClick={() => handleDelete(job._id)}>
-            Delete
-          </Button>
-          {/* Future View Details button */}
-          {/* <Button variant="outline">View Details</Button> */}
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-))}
-
-      </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

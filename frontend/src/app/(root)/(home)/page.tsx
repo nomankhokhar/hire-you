@@ -10,6 +10,7 @@ import LoaderUI from "@/components/LoaderUI";
 import MeetingModel from "@/components/MeetingModel";
 import { Loader2Icon } from "lucide-react";
 import MeetingCard from "@/components/MeetingCard";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const router = useRouter();
@@ -38,8 +39,9 @@ export default function Home() {
 
   return (
     <div className="container max-w-7xl mx-auto p-6">
-      <div className="rounded-lg bg-card p-6 border shadow-sm mb-10">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+      <div className="flex justify-between rounded-lg bg-card p-6 border shadow-sm mb-10">
+      <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
           Welcome back!
         </h1>
         <p className="text-muted-foreground mt-2">
@@ -47,6 +49,12 @@ export default function Home() {
             ? "Manage your interviews and review candidates effectively"
             : "Access your upcoming interviews and preparations"}
         </p>
+      </div>
+      <div>
+        <Button className="mt-4" onClick={() => router.push("/jobs")}>
+          Add New Job
+        </Button>
+      </div>
       </div>
 
       {isInterviewer ? (
