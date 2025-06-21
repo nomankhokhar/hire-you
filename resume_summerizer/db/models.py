@@ -7,26 +7,32 @@ class Salary(BaseModel):
     max: float
     currency: str
 
+class CompanyInfo(BaseModel):
+    name: str
+    description: str
+    locations: List[str]
+    website: Optional[str] = None
+
 class JobPost(BaseModel):
     title: str
+    summary: str
     description: str
     requirements: List[str]
     responsibilities: List[str]
-    employmentType: str  # e.g., "Full-time", "Part-time", etc.
 
-    locationType: str  # "Remote", "On-site", "Hybrid"
+    requiredSkills: List[str]
+    niceToHaveSkills: Optional[List[str]] = []
+
+    experienceYears: int
     isRemote: bool
 
     salary: Salary
-
     benefits: List[str]
     tags: List[str]
-    experienceLevel: str  # e.g., "Junior", "Mid", "Senior"
-    category: str         # e.g., "Engineering", "Marketing"
 
-    postedBy: str
-    status: str = "active"  # default: active
+    company: CompanyInfo
+    status: str = "active"
 
     deadline: datetime
-    createdAt: datetime
-    updatedAt: datetime
+    createdAt: Optional[datetime] = None  # <-- Optional
+    updatedAt: Optional[datetime] = None  # <-- Optional

@@ -5,6 +5,7 @@ from services.gemini_summarizer import summarize_resume_from_file
 from db.mongodb import db
 from db.models import JobPost
 from datetime import datetime
+from bson import ObjectId
 
 
 app = FastAPI()
@@ -58,9 +59,33 @@ async def upload_resume(
 @app.post("/upload-job-post")
 async def create_job(job: JobPost):
     now = datetime.utcnow()
-    job_data = job.dict()
+    job_data = job.dict(exclude_unset=True)
     job_data["createdAt"] = now
     job_data["updatedAt"] = now
 
     result = await db["jobs"].insert_one(job_data)
     return {"id": str(result.inserted_id)}
+
+
+# Get all job posts
+@app.get("/job-posts")
+async def get_all_jobs():
+    jobs = []
+    cursor = db["jobs"].find()
+    async for job in cursor:
+        job["_id"] = str(job["_id"])  # Convert ObjectId to string
+        jobs.append(job)
+    return jobs
+
+# Delete job post by ID
+@app.delete("/delete-job/{job_id}")
+async def delete_job(job_id: str):
+    try:
+        obj_id = ObjectId(job_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid job ID format")
+
+    result = await db["jobs"].delete_one({"_id": obj_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Job post not found")
+    return {"message": "Job post deleted successfully", "id": job_id}
