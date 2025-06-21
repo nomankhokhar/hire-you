@@ -16,6 +16,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { AlertCircleIcon, BookIcon, LightbulbIcon } from "lucide-react";
 import Editor from "@monaco-editor/react";
+import { Button } from "./ui/button";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { TerminalOutput } from "@/components/TerminalOutput";
+import { set } from "date-fns";
 
 function CodeEditor() {
   const [selectedQuestion, setSelectedQuestion] = useState(CODING_QUESTIONS[0]);
@@ -23,7 +28,8 @@ function CodeEditor() {
     LANGUAGES[0].id
   );
   const [code, setCode] = useState(selectedQuestion.starterCode[language]);
-
+  const [visible, setVisible] = useState(false);
+  const [output, setOutput] = useState<string>("");
   const handleQuestionChange = (questionId: string) => {
     const question = CODING_QUESTIONS.find((q) => q.id === questionId)!;
     setSelectedQuestion(question);
@@ -35,6 +41,49 @@ function CodeEditor() {
   ) => {
     setLanguage(newLanguage);
     setCode(selectedQuestion.starterCode[newLanguage]);
+  };
+
+  const runTheCode = async () => {
+    const payload = {
+      code: code,
+      language: language == "javascript" ? "js" : language,
+    };
+    switch (language) {
+      case "javascript":
+        payload.code = code;
+        payload.language = "js";
+        break;
+    }
+    try {
+      const response = await axios.post(
+        process.env.NEXT_PUBLIC_CODE_RUNNER_URL + "/run",
+        payload
+      );
+
+      if (response.status === 200) {
+        const output = response.data.output;
+        setOutput((pre) => (pre = output));
+        toast.success("Code ran successfully!");
+      }
+    } catch (error: unknown) {
+      // Type guard to check if error has the expected structure
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as any).response === "object" &&
+        (error as any).response !== null &&
+        "data" in (error as any).response &&
+        typeof (error as any).response.data === "object" &&
+        (error as any).response.data !== null &&
+        "details" in (error as any).response.data
+      ) {
+        setOutput("Error: " + (error as any).response.data.details);
+      } else {
+        setOutput("An unknown error occurred.");
+      }
+      toast.error("An error occurred while running the code.");
+    }
   };
 
   return (
@@ -198,9 +247,46 @@ function CodeEditor() {
               wrappingIndent: "indent",
             }}
           />
+          <div>
+            <Button
+              onClick={() => setVisible(!visible)}
+              className="absolute  bottom-4 right-4  mr-20 z-30"
+            >
+              {visible ? "Hide Output" : "Show Output"}
+            </Button>
+
+            {visible && (
+              <div className="absolute top-0 left-0 right-0 bottom-0 shadow-lg z-20">
+                <TerminalOutput output={output} />
+              </div>
+            )}
+          </div>
         </div>
+        <Button
+          onClick={runTheCode}
+          className="absolute bottom-4 right-4 z-10 flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-4 py-2 shadow-md"
+        >
+          Run Code
+          <LightbulbIcon className="h-4 w-4" />
+        </Button>
+
+        <BottomAlert />
       </ResizablePanel>
     </ResizablePanelGroup>
   );
 }
 export default CodeEditor;
+
+const BottomAlert = () => {
+  return (
+    <div className="absolute bottom-0 left-0 right-0 bg-muted p-1 border-t">
+      <div className="flex items-center text-sm text-muted-foreground">
+        <AlertCircleIcon className="h-3 w-5 text-red-500" />
+        <span>
+          Please ensure your code is correct before submitting. You can test it
+          using the examples provided.
+        </span>
+      </div>
+    </div>
+  );
+};
