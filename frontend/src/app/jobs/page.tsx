@@ -12,7 +12,7 @@ import CreateJob from "@/components/CreateJob";
 import ListedJobs from "@/components/ListedJobs";
 import toast from "react-hot-toast";
 import { JobFormType } from "@/zod/jobSchema";
-
+import { useUserRole } from "@/components/hooks/useUserRole";
 
 export type createJob = {
   title: string;
@@ -65,36 +65,12 @@ export type jobPost = {
 };
 
 export default function JobBoard() {
+  const { isInterviewer, isCandidate, isLoading } = useUserRole();
+  if (isLoading) return <div>Loading...</div>;
+  if (!isInterviewer) return <div>You do not have access to this page</div>;
+ 
   const [jobs, setJobs] = useState<jobPost[]>([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<createJob>({
-    title: "Senior Python Developer",
-    summary:
-      "We are looking for a highly experienced Senior Backend Engineer with deep expertise in Python, Django, and DRF.",
-    description:
-      "This role offers the opportunity to work on a modern, modular backend stack featuring Celery, Docker, CI/CD pipelines, and cloud-native infrastructure.",
-    requirements:
-      "4+ years of experience with Python, Django, and DRF\nExperience with Celery and PostgreSQL\nKnowledge of CI/CD, Docker, and AWS",
-    responsibilities:
-      "Design and maintain backend services using Django\nBuild scalable RESTful APIs\nImplement background tasks with Celery\nCollaborate with frontend and DevOps teams",
-    requiredSkills:
-      "Python,Django,Django REST Framework,PostgreSQL,Celery,Docker,AWS,Git,CI/CD,TDD",
-    niceToHaveSkills: "React,ETL pipelines,Nginx,Microservices",
-    experienceYears: 4,
-    isRemote: true,
-    salaryMin: 150000,
-    salaryMax: 200000,
-    currency: "PKR",
-    benefits:
-      "Health Insurance\nProvident Fund\nAnnual Paid Leaves\nCertifications & Training\nCar & Bike Finance\nChild Education Program\nTwo Annual Trips\nStars of the Month\nReferral Bonuses\nBirthday & Eid Gifts",
-    tags: "Senior,Backend,Python,Remote,Django,Celery",
-    companyName: "PureLogics",
-    companyDescription:
-      "A full-service technology company with 18+ years of experience and offices in the USA, UAE, and Pakistan.",
-    companyLocations: "USA,UAE,Lahore",
-    companyWebsite: "https://purelogics.net",
-    deadline: "2025-07-21",
-  });
 
   const [viewDatils, setViewDetails] = useState<jobPost | null>(null);
   const handleViewDetails = (id: string) => {
@@ -106,48 +82,54 @@ export default function JobBoard() {
   };
 
   const fetchJobs = async () => {
-    const res = await axios.get(process.env.NEXT_PUBLIC_BACKEND_URL +"/job-posts");
+    const res = await axios.get(
+      process.env.NEXT_PUBLIC_BACKEND_URL + "/job-posts"
+    );
     setJobs(res.data);
   };
 
   useEffect(() => {
     fetchJobs();
   }, []);
- const handleCreateJob = async (data: JobFormType) => {
-  const payload = {
-    ...data,
-    requirements: data.requirements.split("\n"),
-    responsibilities: data.responsibilities.split("\n"),
-    requiredSkills: data.requiredSkills.split(","),
-    niceToHaveSkills: (data.niceToHaveSkills ?? "").split(","),
-    benefits: data.benefits.split("\n"),
-    tags: data.tags.split(","),
-    company: {
-      name: data.companyName,
-      description: data.companyDescription,
-      locations: data.companyLocations.split(","),
-      website: data.companyWebsite,
-    },
-    salary: {
-      min: data.salaryMin,
-      max: data.salaryMax,
-      currency: data.currency,
-    },
+  const handleCreateJob = async (data: JobFormType) => {
+    const payload = {
+      ...data,
+      requirements: data.requirements.split("\n"),
+      responsibilities: data.responsibilities.split("\n"),
+      requiredSkills: data.requiredSkills.split(","),
+      niceToHaveSkills: (data.niceToHaveSkills ?? "").split(","),
+      benefits: data.benefits.split("\n"),
+      tags: data.tags.split(","),
+      company: {
+        name: data.companyName,
+        description: data.companyDescription,
+        locations: data.companyLocations.split(","),
+        website: data.companyWebsite,
+      },
+      salary: {
+        min: data.salaryMin,
+        max: data.salaryMax,
+        currency: data.currency,
+      },
+    };
+
+    const res = await axios.post(
+      process.env.NEXT_PUBLIC_BACKEND_URL + "/upload-job-post",
+      payload
+    );
+
+    if (res.status !== 200) {
+      toast.error("Failed to create job");
+      return;
+    }
+    fetchJobs();
+    toast.success("Job created successfully");
   };
 
-  const res = await axios.post(process.env.NEXT_PUBLIC_BACKEND_URL + "/upload-job-post", payload);
-
-  if (res.status !== 200) {
-    toast.error("Failed to create job");
-    return;
-  }
-  fetchJobs();
-  toast.success("Job created successfully");
-};
-
-
   const handleDelete = async (id: string) => {
-    const res = await axios.delete(process.env.NEXT_PUBLIC_BACKEND_URL + `/delete-job/${id}`);
+    const res = await axios.delete(
+      process.env.NEXT_PUBLIC_BACKEND_URL + `/delete-job/${id}`
+    );
     if (res.status !== 200) {
       toast.error("Failed to delete job");
       return;
@@ -164,8 +146,7 @@ export default function JobBoard() {
           <TabsTrigger value="listed-job">Listed Job</TabsTrigger>
         </TabsList>
         <TabsContent value="create-job">
-        <CreateJob onSubmit={handleCreateJob} />
-
+          <CreateJob onSubmit={handleCreateJob} />
         </TabsContent>
         <TabsContent value="listed-job">
           <ListedJobs
